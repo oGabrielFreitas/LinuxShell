@@ -1,3 +1,30 @@
+/*
+-   Developed by:           Gabriel Giacomini de Freitas
+-   Date:                   10/2019
+-   Object:                 Operation System Curse - UFSM
+-   Official Repository:    https://github.com/oGabrielFreitas/LinuxShell
+-   Goal:                   Develop a personal shell for Linux
+-
+-   List of Commands:
+-   > Use 'debug' command or '-d' as initial argument to debug
+-
+-   > Define environment variables by using the syntax: @var_name = var_value
+-       You can redefine a value for same variable!
+-
+-   > dir:                  Fork and /bin/ls (accept ls arguments)
+-   > espera 'time':        Fork and sleep 'time'
+-   > executa 'dir':        Fork and execute 'dir' program
+-   > agora:                Fork and show date (/bin/date) (accept date arguments)
+-   > limpar:               Reset screen
+-   > historico:            Show last 10 commands useds
+-   > debug:                Set on/off debug mode
+-   > imprime '@var_name':  Show var_value of '@var_name'
+-   > sair:                 Exit
+-   
+-   Take a look in README for more information.
+-
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +34,6 @@
 #include <sys/types.h>
 
 //Define cores para printf
-
 #define RESET       "\033[0m"
 #define BLACK       "\033[30m"             /* Black */
 #define RED         "\033[31m"             /* Red */
@@ -65,6 +91,7 @@ int setDebug(int flag_debug){
     }
 }
 
+//Função que encontra variável pelo nome
 int findVarByName(char * name, varAm * varVet){
 
     int i = 0;
@@ -85,6 +112,7 @@ int findVarByName(char * name, varAm * varVet){
     return -1;
 }
 
+//Funçãio que encontra a quantidade de variáveis em histórico
 int getHistIndex(histS * hist){
     if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"getHistIndex"WHITE" : ENTROU\n"RESET);}
 
@@ -99,6 +127,7 @@ int getHistIndex(histS * hist){
     return i;
 }
 
+//Função que salva e realoca variáveis do histórico
 void indexHist(histS * hist, char * last){
     if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"indexHist"WHITE" : ENTROU\n"RESET);}
 
@@ -125,9 +154,8 @@ void indexHist(histS * hist, char * last){
     }
 }
 
-
-
-
+//----------------------------------------
+//MAIN
 int main(int argc, char const *argv[])
 {
 
@@ -146,20 +174,20 @@ int main(int argc, char const *argv[])
     //Flags
     int flag_repeat = 0;
 
-    //Variáveis de incremento
+    //Variáveis
     int cmd_i = 1;
     int n = 0;
     int i = 0;
-    int bkp = 0;
+    int get_id, temp_id;
 
     //Ter debug como argumento de entrada
     if(argc > 1)
         if(!strcmp(argv[1],"-d"))
             flag_debug = 1;
 
-    system("reset");
+    system("reset"); //Limpa console
 
-
+    //Programa entra em loop até 'sair'
         while(1){
 
             do{
@@ -174,10 +202,8 @@ int main(int argc, char const *argv[])
 
                     //Separa argumentos em um array char
                     cmds[0] = strtok(command, SPACE);
-                    cmd_i = 1;   
-                    while(cmds[cmd_i-1] != NULL){
+                    for(cmd_i = 1 ; cmds[cmd_i-1] != NULL ; cmd_i++){
                         cmds[cmd_i] = strtok(NULL, SPACE);
-                        cmd_i++; 
                     }
                 }while(cmds[0]==NULL); //Repete enquanto o usuário não insere nada
 
@@ -216,10 +242,26 @@ int main(int argc, char const *argv[])
 
                 //COMANDO LIMPAR SHELL
                 else if(!strcmp(cmds[0],"limpar")){
-                    if(flag_debug){printf(YELLOW"DEBUG: Entrou em limpar\n"RESET);}
+                    if(flag_debug){printf(YELLOW"DEBUG: Entrou em LIMPAR\n"RESET);}
 
                     flag_repeat = 1;
                     system("reset");
+                }
+
+                //COMANDO HISTORICO
+                else if(!strcmp(cmds[0],"historico")){
+                    if(flag_debug){printf(YELLOW"DEBUG: Entrou em HISTÓRICO\n"RESET);}
+
+                    flag_repeat = 1;
+
+                    n = getHistIndex(hist);
+
+                    if(n == -1){n=10;}
+
+                    for(i = 0 ; i < n ; i++){
+                        printf("> %d: %s\n",i, hist[i].value);
+                    }
+
                 }
 
                 //COMANDO IMPRIME
@@ -228,7 +270,7 @@ int main(int argc, char const *argv[])
 
                     flag_repeat = 1;
 
-                    int get_id = findVarByName(cmds[1], var);
+                    get_id = findVarByName(cmds[1], var);
 
                     if(get_id == -1){
                         printf(RED"Variável \"%s\" não encontrada.\n"RESET, cmds[1]);
@@ -245,19 +287,27 @@ int main(int argc, char const *argv[])
                 else if(cmds[0][0] == '@' && cmds[0][1] != '\0' && !strcmp(cmds[1],"=") && cmds[2] != NULL){
                     if(flag_debug){printf(YELLOW"DEBUG: Entrou em CRIAR VARIÁVEL\n"RESET);}
 
-                    flag_repeat = 1;
+                        flag_repeat = 1;
 
-                    var[var_id].id = var_id;
+                        get_id = findVarByName(cmds[0], var);
 
-                        var[var_id].name = malloc(1 + sizeof(varAm));
-                        strcpy(var[var_id].name,cmds[0]);
+                        if(get_id == -1){       //Se não houver uma variável igual
+                            temp_id = var_id;   //Define para salvar no var_id
+                            var_id++;           //Incrementa o var_id para salvar a próxima
 
-                        var[var_id].value = malloc(1 + sizeof(varAm));
-                        strcpy(var[var_id].value,cmds[2]);
+                        }else{
+                            temp_id = get_id;   //Se houver variável igual, a função findVarByName vai retornar seu id
+                        }
 
-                        if(flag_debug){printf(YELLOW"var.id = %d / var.name = %s / var.value = %s \n"RESET, var[var_id].id, var[var_id].name, var[var_id].value);}
+                        var[temp_id].id = temp_id;
 
-                        var_id++;
+                        var[temp_id].name = malloc(1 + sizeof(varAm));
+                        strcpy(var[temp_id].name,cmds[0]);
+
+                        var[temp_id].value = malloc(1 + sizeof(varAm));
+                        strcpy(var[temp_id].value,cmds[2]);
+
+                        if(flag_debug){printf(YELLOW"var.id = %d / var.name = %s / var.value = %s \n"RESET, var[temp_id].id, var[temp_id].name, var[temp_id].value);}
                     }
 
             }while(flag_repeat); //Repete caso tenha executado alguma função deste escopo (pois as funções aqui não precisam de fork)
@@ -337,9 +387,6 @@ int main(int argc, char const *argv[])
 
             }           
         } //Fim do While
-
-//       } 
-//   }while (!flag_oneTime);
 
     return 0;
 }
