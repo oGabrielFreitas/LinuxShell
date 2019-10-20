@@ -46,6 +46,7 @@ typedef struct
     
 }varAm;
 
+//Struct que define função a ser salva
 typedef struct 
 {  
     int id;
@@ -146,9 +147,15 @@ int main(int argc, char const *argv[])
     int flag_repeat = 0;
 
     //Variáveis de incremento
+    int cmd_i = 1;
     int n = 0;
     int i = 0;
-    int test = 0;
+    int bkp = 0;
+
+    //Ter debug como argumento de entrada
+    if(argc > 1)
+        if(!strcmp(argv[1],"-d"))
+            flag_debug = 1;
 
     system("reset");
 
@@ -159,23 +166,30 @@ int main(int argc, char const *argv[])
                 flag_repeat = 0; //Flag para não repetir o do
                 memset(cmds, 0, sizeof(cmds));  //Limpa cmds
 
-                printf(BOLDCYAN"msh> "RESET); //Imprime index do Shell
-                fgets(command, CMD_MAX, stdin); //Le entrada de argumentos do usuário
 
-                //Separa argumentos em um array char
-                cmds[0] = strtok(command, SPACE);
-                int i = 1;   
-                while(cmds[i-1] != NULL){
-                    cmds[i] = strtok(NULL, SPACE);
-                    i++; 
-                }
+                //Do While para corrigir bug de entrada vazia
+                do{
+                    printf(BOLDCYAN"msh> "RESET); //Imprime index do Shell
+                    fgets(command, CMD_MAX, stdin); //Le entrada de argumentos do usuário
 
-                //Insere comando na array de variáveis
-                //Faz uma cópia de cmds[0] antes, pois strtok edita os valores como ponteiro mesmo no futuro
-                temp = malloc(sizeof(cmds[0]));
-                strcpy(temp,cmds[0]);
-                indexHist(hist,temp);
-               
+                    //Separa argumentos em um array char
+                    cmds[0] = strtok(command, SPACE);
+                    cmd_i = 1;   
+                    while(cmds[cmd_i-1] != NULL){
+                        cmds[cmd_i] = strtok(NULL, SPACE);
+                        cmd_i++; 
+                    }
+                }while(cmds[0]==NULL); //Repete enquanto o usuário não insere nada
+
+
+                //Insere comando na array de histórico de comandos
+                //Faz uma cópia de cmds[0] para temp antes, pois strtok edita os valores como ponteiro mesmo no futuro                
+                if(cmds[0] != NULL){
+                    temp = malloc(sizeof(cmds[0]));
+                    strcpy(temp,cmds[0]);
+                    indexHist(hist,temp);
+                }                           
+                               
                 //DEBUG: Imprime separadamente array de argumentos
                 if(flag_debug){
                     for(i = 0; cmds[i];i++){
@@ -183,6 +197,7 @@ int main(int argc, char const *argv[])
                     }
                 }
 
+                //----------------------------------------------------------------
                 //Comandos que não precisam de fork
 
                 //COMANDO SAIR
@@ -245,11 +260,13 @@ int main(int argc, char const *argv[])
                         var_id++;
                     }
 
-            }while(flag_repeat);
-                  
+            }while(flag_repeat); //Repete caso tenha executado alguma função deste escopo (pois as funções aqui não precisam de fork)
 
-            //Faz o fork()
-            pid_t pid = fork();           
+
+            //--------------------------------------------------
+            //Comandos que precisam de FORK
+
+            pid_t pid = fork(); //Faz fork        
 
             switch(pid)
             {
