@@ -46,6 +46,12 @@ typedef struct
     
 }varAm;
 
+typedef struct 
+{  
+    int id;
+    char * value;
+}histS;
+
 //Função que LIGA/DESLIGA Debug mode
 int setDebug(int flag_debug){
 
@@ -62,21 +68,63 @@ int findVarByName(char * name, varAm * varVet){
 
     int i = 0;
 
-    if(flag_debug){printf(WHITE"DEBUG: Função findVarByName: Name passado: >%s<\n"RESET, name);}    
+    if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"findVarByName"WHITE" : Name passado: >%s<\n"RESET, name);}    
 
     for(i = 0 ; varVet[i].name != NULL ; i++){
 
-        if(flag_debug){printf(WHITE"DEBUG: Função findVarByName: TEST > id: %d / Name: %s / Value: %s\n"RESET, varVet[i].id, varVet[i].name, varVet[i].value);}
+        if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"findVarByName"WHITE" : TEST > id: %d / Name: %s / Value: %s\n"RESET, varVet[i].id, varVet[i].name, varVet[i].value);}
 
         if(!strcmp(varVet[i].name,name)){
-            if(flag_debug){printf(WHITE"DEBUG: Função findVarByName: ACHOU no id: %d\n"RESET, varVet[i].id);}
+            if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"findVarByName"WHITE" : ACHOU no id: %d\n"RESET, varVet[i].id);}
 
             return varVet[i].id;
         }
     }
-    if(flag_debug){printf(WHITE"DEBUG: Função findVarByName: NÃO ENCONTROU - Return: -1\n"RESET);}
+    if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"findVarByName"WHITE" : NÃO ENCONTROU - Return: -1\n"RESET);}
     return -1;
 }
+
+int getHistIndex(histS * hist){
+    if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"getHistIndex"WHITE" : ENTROU\n"RESET);}
+
+    int i = 0;
+
+    for(i = 0; hist[i].value != NULL; i++){
+        //if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"getHistIndex"WHITE" : TESTOU id: %d\n"RESET, i);}
+        if(i > 8){
+            return -1;
+        }
+    }
+    return i;
+}
+
+void indexHist(histS * hist, char * last){
+    if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"indexHist"WHITE" : ENTROU\n"RESET);}
+
+    int i = getHistIndex(hist);
+    int n = 1;
+
+    if(i == -1){
+        if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"indexHist"WHITE" : Mais de 10 variáveis, serão agora realocadas\n"RESET);}
+
+        for(n = 1; n < 10 ; n++){       
+            //printf("alocou %d\n", n);     
+            hist[n-1].value = malloc(sizeof(histS));
+            hist[n-1].value = hist[n].value;
+        }
+        //printf("alocou 10\n");
+        hist[9].value = malloc(sizeof(histS));
+        hist[9].value = last;
+
+    }else{
+        if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"indexHist"WHITE" : Variável \"%s\" alocada no id: %d\n"RESET, last, i);}
+
+        hist[i].value = malloc(sizeof(histS));
+        hist[i].value = last;
+    }
+}
+
+
 
 
 int main(int argc, char const *argv[])
@@ -85,6 +133,10 @@ int main(int argc, char const *argv[])
     //Strings
     char command[CMD_MAX];
     char * cmds[CMD_MAX];
+
+    //Histórico de funções
+    histS hist[CMD_MAX];
+    char * temp;
 
     //Variaveis de ambiente
     varAm var[VAR_MAX];
@@ -96,6 +148,7 @@ int main(int argc, char const *argv[])
     //Variáveis de incremento
     int n = 0;
     int i = 0;
+    int test = 0;
 
     system("reset");
 
@@ -116,6 +169,12 @@ int main(int argc, char const *argv[])
                     cmds[i] = strtok(NULL, SPACE);
                     i++; 
                 }
+
+                //Insere comando na array de variáveis
+                //Faz uma cópia de cmds[0] antes, pois strtok edita os valores como ponteiro mesmo no futuro
+                temp = malloc(sizeof(cmds[0]));
+                strcpy(temp,cmds[0]);
+                indexHist(hist,temp);
                
                 //DEBUG: Imprime separadamente array de argumentos
                 if(flag_debug){
@@ -148,9 +207,9 @@ int main(int argc, char const *argv[])
                     system("reset");
                 }
 
-                //COMANDO MOSTRA
-                else if(!strcmp(cmds[0],"mostra")){
-                    if(flag_debug){printf(YELLOW"DEBUG: Entrou em MOSTRA\n"RESET);}
+                //COMANDO IMPRIME
+                else if(!strcmp(cmds[0],"imprime")){
+                    if(flag_debug){printf(YELLOW"DEBUG: Entrou em IMPRIME\n"RESET);}
 
                     flag_repeat = 1;
 
