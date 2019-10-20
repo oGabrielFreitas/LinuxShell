@@ -64,7 +64,7 @@ int findVarByName(char * name, varAm * varVet){
 
     if(flag_debug){printf(WHITE"DEBUG: Função findVarByName: Name passado: >%s<\n"RESET, name);}    
 
-    for(i = 0 ; i<sizeof(varVet) ; i++){
+    for(i = 0 ; varVet[i].name != NULL ; i++){
 
         if(flag_debug){printf(WHITE"DEBUG: Função findVarByName: TEST > id: %d / Name: %s / Value: %s\n"RESET, varVet[i].id, varVet[i].name, varVet[i].value);}
 
@@ -74,7 +74,8 @@ int findVarByName(char * name, varAm * varVet){
             return varVet[i].id;
         }
     }
-    return 0;
+    if(flag_debug){printf(WHITE"DEBUG: Função findVarByName: NÃO ENCONTROU - Return: -1\n"RESET);}
+    return -1;
 }
 
 
@@ -155,18 +156,24 @@ int main(int argc, char const *argv[])
 
                     int get_id = findVarByName(cmds[1], var);
 
-                    printf("%s\n", var[get_id].value);
+                    if(get_id == -1){
+                        printf(RED"Variável \"%s\" não encontrada.\n"RESET, cmds[1]);
+                    }else{
+                        printf("%s\n", var[get_id].value);
+                    }
                 }
 
                 //COMANDO PARA CRIAR VARIÁVEL DE AMBIENTE (DEVE SER O ÚLTIMO COMANDO)
-                else if(cmds[2] != NULL){
-                    if(flag_debug){printf(YELLOW"DEBUG: Entrou em CMDS[2] != NULL\n"RESET);}
-                    if(!strcmp(cmds[1],"=")){
-                        if(flag_debug){printf(YELLOW"DEBUG: Entrou em CRIAR VARIÁVEL\n"RESET);}
+                /*Verifica se o primeiro char é um '@' que define variável. 
+                Verifica se existe algo depois do @, para não ser possível criar uma variável chamada @
+                Verifica se existe o operador =
+                Verifica se existe argumento para ser indexado à variável*/
+                else if(cmds[0][0] == '@' && cmds[0][1] != '\0' && !strcmp(cmds[1],"=") && cmds[2] != NULL){
+                    if(flag_debug){printf(YELLOW"DEBUG: Entrou em CRIAR VARIÁVEL\n"RESET);}
 
-                        flag_repeat = 1;
+                    flag_repeat = 1;
 
-                        var[var_id].id = var_id;
+                    var[var_id].id = var_id;
 
                         var[var_id].name = malloc(1 + sizeof(varAm));
                         strcpy(var[var_id].name,cmds[0]);
@@ -178,7 +185,6 @@ int main(int argc, char const *argv[])
 
                         var_id++;
                     }
-                }
 
             }while(flag_repeat);
                   
