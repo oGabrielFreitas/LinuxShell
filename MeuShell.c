@@ -46,14 +46,14 @@ typedef struct
     
 }varAm;
 
-
+//Função que LIGA/DESLIGA Debug mode
 int setDebug(int flag_debug){
 
     if(flag_debug == 1){
         printf(BOLDYELLOW"DEBUG: Debug mode - off\n"RESET);
         return 0;
     }else{
-        printf(BOLDYELLOW"DEBUG: Debug mode - on\n"RESET);
+        printf(BOLDYELLOW"DEBUG: Debug mode - on\t Cores: "RESET YELLOW" PAI "CYAN" FILHO "WHITE" FUNÇÕES \n"RESET);
         return 1;
     }
 }
@@ -62,14 +62,14 @@ int findVarByName(char * name, varAm * varVet){
 
     int i = 0;
 
-    if(flag_debug){printf(YELLOW"DEBUG: Função findVarByName: Name passado: >%s<\n"RESET, name);}    
+    if(flag_debug){printf(WHITE"DEBUG: Função findVarByName: Name passado: >%s<\n"RESET, name);}    
 
     for(i = 0 ; i<sizeof(varVet) ; i++){
 
-        if(flag_debug){printf(YELLOW"DEBUG: Função findVarByName TEST > id: %d / Name: %s / Value: %s\n"RESET, varVet[i].id, varVet[i].name, varVet[i].value);}
+        if(flag_debug){printf(WHITE"DEBUG: Função findVarByName: TEST > id: %d / Name: %s / Value: %s\n"RESET, varVet[i].id, varVet[i].name, varVet[i].value);}
 
         if(!strcmp(varVet[i].name,name)){
-            if(flag_debug){printf(YELLOW"DEBUG: Função findVarByName ACHOU no id: %d\n"RESET, varVet[i].id);}
+            if(flag_debug){printf(WHITE"DEBUG: Função findVarByName: ACHOU no id: %d\n"RESET, varVet[i].id);}
 
             return varVet[i].id;
         }
@@ -102,19 +102,11 @@ int main(int argc, char const *argv[])
         while(1){
 
             do{
-                flag_repeat = 0;
-                memset(cmds, 0, sizeof(cmds));
+                flag_repeat = 0; //Flag para não repetir o do
+                memset(cmds, 0, sizeof(cmds));  //Limpa cmds
 
-                /*
-                if(var_id >= 1){
-                printf("ENTRANDO LOOP VAR[0].value = %s\n", var[var_id-1].value);
-                printf("ENTRANDO LOOP VAR[0].lixo = %s\n", var[var_id-1].lixo);
-                printf(GREEN"DEBUG: CMDS[2] =>%s<\n"RESET, cmds[2]);
-                printf("var_id = %d\n",var_id);
-                }*/
-
-                printf(BOLDCYAN"msh> "RESET); //Impr
-                fgets(command, CMD_MAX, stdin); 
+                printf(BOLDCYAN"msh> "RESET); //Imprime index do Shell
+                fgets(command, CMD_MAX, stdin); //Le entrada de argumentos do usuário
 
                 //Separa argumentos em um array char
                 cmds[0] = strtok(command, SPACE);
@@ -123,8 +115,6 @@ int main(int argc, char const *argv[])
                     cmds[i] = strtok(NULL, SPACE);
                     i++; 
                 }
-
-                strtok(command,"");
                
                 //DEBUG: Imprime separadamente array de argumentos
                 if(flag_debug){
@@ -169,8 +159,8 @@ int main(int argc, char const *argv[])
                 }
 
                 //COMANDO PARA CRIAR VARIÁVEL DE AMBIENTE (DEVE SER O ÚLTIMO COMANDO)
-                else if(cmds[1] != NULL){
-                    if(flag_debug){printf(YELLOW"DEBUG: Entrou em CMDS != NULL\n"RESET);}
+                else if(cmds[2] != NULL){
+                    if(flag_debug){printf(YELLOW"DEBUG: Entrou em CMDS[2] != NULL\n"RESET);}
                     if(!strcmp(cmds[1],"=")){
                         if(flag_debug){printf(YELLOW"DEBUG: Entrou em CRIAR VARIÁVEL\n"RESET);}
 
@@ -178,15 +168,13 @@ int main(int argc, char const *argv[])
 
                         var[var_id].id = var_id;
 
-                        var[var_id].value = malloc(1 + sizeof(varAm));
-                        strcpy(var[var_id].value,cmds[2]);
-
                         var[var_id].name = malloc(1 + sizeof(varAm));
                         strcpy(var[var_id].name,cmds[0]);
 
-                        //memset(cmds[2], 0, sizeof(cmds));
+                        var[var_id].value = malloc(1 + sizeof(varAm));
+                        strcpy(var[var_id].value,cmds[2]);
 
-                        //if(flag_debug){printf(YELLOW"var.id = %d / var.name = %s / var.value = %s \n"RESET, var[var_id].id, var[var_id].name, var[var_id].value);}
+                        if(flag_debug){printf(YELLOW"var.id = %d / var.name = %s / var.value = %s \n"RESET, var[var_id].id, var[var_id].name, var[var_id].value);}
 
                         var_id++;
                     }
@@ -208,7 +196,7 @@ int main(int argc, char const *argv[])
                 //Caso fork der certo
                 case 0:     
 
-                    if(flag_debug){printf(CYAN"DEBUG: Fez Fork - PID:%d\n"RESET, pid);}                
+                    if(flag_debug){printf(CYAN"DEBUG: Fez Fork - PID: %d\n"RESET, pid);}                
 
                     //COMANDO DIR
                     if(!strcmp(cmds[0],"dir")){  
