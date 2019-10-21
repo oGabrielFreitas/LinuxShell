@@ -19,6 +19,7 @@
 -   > historico:            Show last 10 commands useds
 -   > debug:                Set on/off debug mode
 -   > imprime '@var_name':  Show var_value of '@var_name'
+-   > imprime 'value':      Just show 'value'
 -   > sair:                 Exit
 -   
 -   Take a look in README for more information.
@@ -129,7 +130,7 @@ int getHistIndex(histS * hist){
 
 //Função que salva e realoca variáveis do histórico
 void indexHist(histS * hist, char * last){
-    if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"indexHist"WHITE" : ENTROU\n"RESET);}
+    if(flag_debug){printf(WHITE"DEBUG: Função "GREEN"indexHist"WHITE" : ENTROU para salvar: %s\n"RESET, last);}
 
     int i = getHistIndex(hist);
     int n = 1;
@@ -270,13 +271,22 @@ int main(int argc, char const *argv[])
 
                     flag_repeat = 1;
 
-                    get_id = findVarByName(cmds[1], var);
-
-                    if(get_id == -1){
-                        printf(RED"Variável \"%s\" não encontrada.\n"RESET, cmds[1]);
-                    }else{
-                        printf("%s\n", var[get_id].value);
+                    if(cmds[1] == NULL){
+                        printf(RED"Comando \"%s\" necessita de ao menos 1 parâmetro.\n"RESET,cmds[0]);
                     }
+                    else if(cmds[1][0] == '@'){
+
+                        get_id = findVarByName(cmds[1], var);
+
+                        if(get_id == -1){
+                            printf(RED"Variável \"%s\" não encontrada.\n"RESET, cmds[1]);
+                        }else{
+                            printf("%s\n", var[get_id].value);
+                        }
+
+                    }else{
+                        printf("%s\n", cmds[1]);
+                    }         
                 }
 
                 //COMANDO PARA CRIAR VARIÁVEL DE AMBIENTE (DEVE SER O ÚLTIMO COMANDO)
@@ -307,7 +317,7 @@ int main(int argc, char const *argv[])
                         var[temp_id].value = malloc(1 + sizeof(varAm));
                         strcpy(var[temp_id].value,cmds[2]);
 
-                        if(flag_debug){printf(YELLOW"var.id = %d / var.name = %s / var.value = %s \n"RESET, var[temp_id].id, var[temp_id].name, var[temp_id].value);}
+                        if(flag_debug){printf(YELLOW"DEBUG: Variável salva como -> var.id = %d / var.name = %s / var.value = %s \n"RESET, var[temp_id].id, var[temp_id].name, var[temp_id].value);}
                     }
 
             }while(flag_repeat); //Repete caso tenha executado alguma função deste escopo (pois as funções aqui não precisam de fork)
@@ -390,3 +400,5 @@ int main(int argc, char const *argv[])
 
     return 0;
 }
+
+//Fim
