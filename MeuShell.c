@@ -10,6 +10,7 @@
 -
 -   > Define environment variables by using the syntax: @var_name = var_value
 -       You can redefine a value for same variable!
+-       You can asset a command and execute with the variable name. Like set @var = imprime ola. And then set @var to execute
 -
 -   > dir:                  Fork and /bin/ls (accept ls arguments)
 -   > espera 'time':        Fork and sleep 'time'
@@ -69,7 +70,7 @@ typedef struct
     int id;
     char * name;
     char * value;
-    char * lixo;
+    char * arg;
     
 }varAm;
 
@@ -174,6 +175,7 @@ int main(int argc, char const *argv[])
 
     //Flags
     int flag_repeat = 0;
+    int flag_not_read = 0;
 
     //Variáveis
     int cmd_i = 1;
@@ -193,29 +195,30 @@ int main(int argc, char const *argv[])
 
             do{
                 flag_repeat = 0; //Flag para não repetir o do
-                memset(cmds, 0, sizeof(cmds));  //Limpa cmds
-
-
+                
+                //Flag para não ler
+                if(!flag_not_read){
                 //Do While para corrigir bug de entrada vazia
-                do{
-                    printf(BOLDCYAN"msh> "RESET); //Imprime index do Shell
-                    fgets(command, CMD_MAX, stdin); //Le entrada de argumentos do usuário
+                    do{
+                        memset(cmds, 0, sizeof(cmds));  //Limpa cmds
 
-                    //Separa argumentos em um array char
-                    cmds[0] = strtok(command, SPACE);
-                    for(cmd_i = 1 ; cmds[cmd_i-1] != NULL ; cmd_i++){
-                        cmds[cmd_i] = strtok(NULL, SPACE);
-                    }
-                }while(cmds[0]==NULL); //Repete enquanto o usuário não insere nada
+                        printf(BOLDCYAN"msh> "RESET); //Imprime index do Shell
+                        fgets(command, CMD_MAX, stdin); //Le entrada de argumentos do usuário
 
+                        //Separa argumentos em um array char
+                        cmds[0] = strtok(command, SPACE);
+                        for(cmd_i = 1 ; cmds[cmd_i-1] != NULL ; cmd_i++){
+                            cmds[cmd_i] = strtok(NULL, SPACE);
+                        }
+                    }while(cmds[0]==NULL); //Repete enquanto o usuário não insere nada
+                }
 
                 //Insere comando na array de histórico de comandos
                 //Faz uma cópia de cmds[0] para temp antes, pois strtok edita os valores como ponteiro mesmo no futuro                
-                if(cmds[0] != NULL){
-                    temp = malloc(sizeof(cmds[0]));
-                    strcpy(temp,cmds[0]);
-                    indexHist(hist,temp);
-                }                           
+                
+                temp = malloc(sizeof(cmds[0]));
+                strcpy(temp,cmds[0]);
+                indexHist(hist,temp);                          
                                
                 //DEBUG: Imprime separadamente array de argumentos
                 if(flag_debug){
@@ -238,6 +241,8 @@ int main(int argc, char const *argv[])
                     if(flag_debug){printf(YELLOW"DEBUG: Entrou em DEBUG\n"RESET);}
 
                     flag_repeat = 1;
+                    flag_not_read = 0;
+
                     flag_debug = setDebug(flag_debug);
                 }
 
@@ -246,6 +251,8 @@ int main(int argc, char const *argv[])
                     if(flag_debug){printf(YELLOW"DEBUG: Entrou em LIMPAR\n"RESET);}
 
                     flag_repeat = 1;
+                    flag_not_read = 0;
+
                     system("reset");
                 }
 
@@ -254,6 +261,7 @@ int main(int argc, char const *argv[])
                     if(flag_debug){printf(YELLOW"DEBUG: Entrou em HISTÓRICO\n"RESET);}
 
                     flag_repeat = 1;
+                    flag_not_read = 0;
 
                     n = getHistIndex(hist);
 
@@ -270,6 +278,7 @@ int main(int argc, char const *argv[])
                     if(flag_debug){printf(YELLOW"DEBUG: Entrou em IMPRIME\n"RESET);}
 
                     flag_repeat = 1;
+                    flag_not_read = 0;
 
                     if(cmds[1] == NULL){
                         printf(RED"Comando \"%s\" necessita de ao menos 1 parâmetro.\n"RESET,cmds[0]);
@@ -289,15 +298,17 @@ int main(int argc, char const *argv[])
                     }         
                 }
 
-                //COMANDO PARA CRIAR VARIÁVEL DE AMBIENTE (DEVE SER O ÚLTIMO COMANDO)
+                //COMANDO PARA CRIAR VARIÁVEL DE AMBIENTE
                 /*Verifica se o primeiro char é um '@' que define variável. 
                 Verifica se existe algo depois do @, para não ser possível criar uma variável chamada @
+                Verifica se existe segundo argumento (para evitar falha de segmentação)
                 Verifica se existe o operador =
                 Verifica se existe argumento para ser indexado à variável*/
-                else if(cmds[0][0] == '@' && cmds[0][1] != '\0' && !strcmp(cmds[1],"=") && cmds[2] != NULL){
+                else if(cmds[0][0] == '@' && cmds[0][1] != '\0' && cmds[1] != NULL && !strcmp(cmds[1],"=") && cmds[2] != NULL){
                     if(flag_debug){printf(YELLOW"DEBUG: Entrou em CRIAR VARIÁVEL\n"RESET);}
 
                         flag_repeat = 1;
+                        flag_not_read = 0;
 
                         get_id = findVarByName(cmds[0], var);
 
@@ -317,11 +328,37 @@ int main(int argc, char const *argv[])
                         var[temp_id].value = malloc(1 + sizeof(varAm));
                         strcpy(var[temp_id].value,cmds[2]);
 
+                        if(cmds[3] != NULL){
+                            var[temp_id].arg = malloc(1 + sizeof(varAm));
+                            strcpy(var[temp_id].arg,cmds[3]);
+
+                            if(flag_debug){printf(YELLOW"DEBUG: Variável possui argumento -> var.arg = %s\n", cmds[3]);}
+                        }
+
                         if(flag_debug){printf(YELLOW"DEBUG: Variável salva como -> var.id = %d / var.name = %s / var.value = %s \n"RESET, var[temp_id].id, var[temp_id].name, var[temp_id].value);}
+                    }
+
+                    //COMANDO PARA A VARIÁVEL EXECUTAR FUNÇÃO (DEVE SER O ÚLTIMO COMANDO)
+                    else if(cmds[0][0] == '@'){
+                        if(flag_debug){printf(YELLOW"DEBUG: Entrou para tentar executar valor anexado à variável\n"RESET);}
+                        
+                        flag_repeat = 1;
+                        flag_not_read = 1; // Volta ao topo, mas não le do usuário
+
+                        get_id = findVarByName(cmds[0], var);
+
+                        memset(cmds, 0, sizeof(cmds));  //Limpa cmds
+
+                        cmds[0] = var[get_id].value; //Passa função para escopo
+
+                        if(var[get_id].arg != NULL){    //Verifica se a variável tem um argumento, se tiver, idexa ele no escopo
+                            cmds[1] = var[get_id].arg;
+                        }
                     }
 
             }while(flag_repeat); //Repete caso tenha executado alguma função deste escopo (pois as funções aqui não precisam de fork)
 
+            flag_not_read = 0; //Necessária para não dar descontinuidade ao programa
 
             //--------------------------------------------------
             //Comandos que precisam de FORK
@@ -401,4 +438,4 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
-//Fim
+//Fim.
