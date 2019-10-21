@@ -22,7 +22,7 @@
 -   > imprime '@var_name':  Show var_value of '@var_name'
 -   > imprime 'value':      Just show 'value'
 -	> set:					Used to set username, shellname and debug (eg. set username name)
--								set debug can be setted = on, 1, true, off, 0, false
+-								set debug can be setted on, 1, true, off, 0 or false
 -   > sair:                 Exit
 -   
 -   Take a look in README for more information.
