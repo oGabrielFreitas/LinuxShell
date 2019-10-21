@@ -347,17 +347,22 @@ int main(int argc, char const *argv[])
                         if(flag_debug){printf(YELLOW"DEBUG: Entrou para tentar executar valor anexado à variável\n"RESET);}
                         
                         flag_repeat = 1;
-                        flag_not_read = 1; // Volta ao topo, mas não le do usuário
+                        flag_not_read = 0;
 
                         get_id = findVarByName(cmds[0], var);
 
-                        memset(cmds, 0, sizeof(cmds));  //Limpa cmds
+                        if(get_id == -1){ //Verifica se a variável existe
+                            printf(RED"A variável \"%s\" não foi declarada.\n"RESET,cmds[0]);
+                        }else{
+                            flag_not_read = 1; // Volta ao topo, mas não le do usuário
+                            memset(cmds, 0, sizeof(cmds));  //Limpa cmds
 
-                        cmds[0] = var[get_id].value; //Passa função para escopo
+                            cmds[0] = var[get_id].value; //Passa função para escopo
 
-                        if(var[get_id].arg != NULL){    //Verifica se a variável tem um argumento, se tiver, indexa ele ao escopo
-                            cmds[1] = var[get_id].arg;
-                        }
+                            if(var[get_id].arg != NULL){    //Verifica se a variável tem um argumento, se tiver, idexa ele no escopo
+                                cmds[1] = var[get_id].arg;
+                            }
+                        }                        
                     }
 
             }while(flag_repeat); //Repete caso tenha executado alguma função deste escopo (pois as funções aqui não precisam de fork)
