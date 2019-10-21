@@ -280,10 +280,10 @@ int main(int argc, char const *argv[])
                     flag_repeat = 1;
                     flag_not_read = 0;
 
-                    if(cmds[1] == NULL){
+                    if(cmds[1] == NULL){ //Verifica se tem argumento
                         printf(RED"Comando \"%s\" necessita de ao menos 1 parâmetro.\n"RESET,cmds[0]);
                     }
-                    else if(cmds[1][0] == '@'){
+                    else if(cmds[1][0] == '@'){ //Verifica se o argumento é uma variável de ambiente
 
                         get_id = findVarByName(cmds[1], var);
 
@@ -293,7 +293,7 @@ int main(int argc, char const *argv[])
                             printf("%s\n", var[get_id].value);
                         }
 
-                    }else{
+                    }else{  //Se não for uma variável, simplesmente imprime o valor
                         printf("%s\n", cmds[1]);
                     }         
                 }
@@ -328,11 +328,15 @@ int main(int argc, char const *argv[])
                         var[temp_id].value = malloc(1 + sizeof(varAm));
                         strcpy(var[temp_id].value,cmds[2]);
 
-                        if(cmds[3] != NULL){
+                        if(cmds[3] != NULL){    //Verifica se a variável tem argumento, se tiver, salva ele
                             var[temp_id].arg = malloc(1 + sizeof(varAm));
                             strcpy(var[temp_id].arg,cmds[3]);
 
                             if(flag_debug){printf(YELLOW"DEBUG: Variável possui argumento -> var.arg = %s\n", cmds[3]);}
+
+                        }else{//Se não tiver, deixa o argumento nulo (Para caso de reescrita de variável)
+                            var[temp_id].arg = malloc(1 + sizeof(varAm));
+                            var[temp_id].arg = NULL;
                         }
 
                         if(flag_debug){printf(YELLOW"DEBUG: Variável salva como -> var.id = %d / var.name = %s / var.value = %s \n"RESET, var[temp_id].id, var[temp_id].name, var[temp_id].value);}
@@ -351,7 +355,7 @@ int main(int argc, char const *argv[])
 
                         cmds[0] = var[get_id].value; //Passa função para escopo
 
-                        if(var[get_id].arg != NULL){    //Verifica se a variável tem um argumento, se tiver, idexa ele no escopo
+                        if(var[get_id].arg != NULL){    //Verifica se a variável tem um argumento, se tiver, indexa ele ao escopo
                             cmds[1] = var[get_id].arg;
                         }
                     }
@@ -438,4 +442,4 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
-//Fim
+//Fim.
