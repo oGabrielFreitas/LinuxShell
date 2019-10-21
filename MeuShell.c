@@ -160,6 +160,9 @@ void indexHist(histS * hist, char * last){
 //MAIN
 int main(int argc, char const *argv[])
 {
+    //Users Options
+    char * username = "";
+    char * shell_name = "msh";
 
     //Strings
     char command[CMD_MAX];
@@ -202,7 +205,7 @@ int main(int argc, char const *argv[])
                     do{
                         memset(cmds, 0, sizeof(cmds));  //Limpa cmds
 
-                        printf(BOLDCYAN"msh> "RESET); //Imprime index do Shell
+                        printf(BOLDCYAN"%s@%s> "RESET,username,shell_name); //Imprime index do Shell
                         fgets(command, CMD_MAX, stdin); //Le entrada de argumentos do usuário
 
                         //Separa argumentos em um array char
@@ -305,7 +308,7 @@ int main(int argc, char const *argv[])
                 Verifica se existe o operador =
                 Verifica se existe argumento para ser indexado à variável*/
                 else if(cmds[0][0] == '@' && cmds[0][1] != '\0' && cmds[1] != NULL && !strcmp(cmds[1],"=") && cmds[2] != NULL){
-                    if(flag_debug){printf(YELLOW"DEBUG: Entrou em CRIAR VARIÁVEL\n"RESET);}
+                        if(flag_debug){printf(YELLOW"DEBUG: Entrou em CRIAR VARIÁVEL\n"RESET);}
 
                         flag_repeat = 1;
                         flag_not_read = 0;
@@ -342,6 +345,40 @@ int main(int argc, char const *argv[])
                         if(flag_debug){printf(YELLOW"DEBUG: Variável salva como -> var.id = %d / var.name = %s / var.value = %s \n"RESET, var[temp_id].id, var[temp_id].name, var[temp_id].value);}
                     }
 
+                    //COMANDO SET (SET USER OPTIONS)
+                    else if(!strcmp(cmds[0],"set")){
+                        if(flag_debug){printf(YELLOW"DEBUG: Entrou em SET\n"RESET);} 
+
+                        flag_repeat = 1;
+                        flag_not_read = 0;
+
+                        //COMANDO PARA DEFINIR USERNAME
+                        if(cmds[1] != NULL && !strcmp(cmds[1],"username") && cmds[2] != NULL){
+                            if(flag_debug){printf(YELLOW"DEBUG: Entrou em DEFINIR USERNAME\n"RESET);}                          
+
+                            username = malloc(16 * sizeof(username));
+                            strcpy(username,cmds[2]);
+
+                        }else if(cmds[1] != NULL && !strcmp(cmds[1],"shellname") && cmds[2] != NULL){
+                            if(flag_debug){printf(YELLOW"DEBUG: Entrou em DEFINIR SHELL NAME\n"RESET);}                          
+
+                            shell_name = malloc(16 * sizeof(shell_name));
+                            strcpy(shell_name,cmds[2]);
+
+                        }//COMANDO SET DEBUG
+                        else if(cmds[1] != NULL && !strcmp(cmds[1],"debug") && cmds[2] != NULL){
+                            if(flag_debug){printf(YELLOW"DEBUG: Entrou em SET DEBUG\n"RESET);} 
+
+                            if(!strcmp(cmds[2],"on") || !strcmp(cmds[2],"1") || !strcmp(cmds[2],"true")){flag_debug = 1;}
+                            else if(!strcmp(cmds[2],"off") || !strcmp(cmds[2],"0") || !strcmp(cmds[2],"false")){flag_debug = 0;}
+                            else{printf(RED"Não foi possível dar set \"%s\".\n"RESET,cmds[1]);}
+                        }
+                        else{
+                            printf(RED"O comando \"%s\" possui argumentos insuficientes.\n"RESET,cmds[0]);
+                        }
+
+                    }
+                    
                     //COMANDO PARA A VARIÁVEL EXECUTAR FUNÇÃO (DEVE SER O ÚLTIMO COMANDO)
                     else if(cmds[0][0] == '@'){
                         if(flag_debug){printf(YELLOW"DEBUG: Entrou para tentar executar valor anexado à variável\n"RESET);}
